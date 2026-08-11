@@ -160,3 +160,41 @@ src/main/resources/
   application-dev.yml   local development overrides (active by default)
 src/test/java/...       integration and unit tests
 ```
+
+## Frontend
+
+The `frontend/` directory contains the StayFit React + TypeScript + Vite frontend (see [`frontend/README.md`](frontend/README.md) for local setup, scripts, and project structure). This section covers the frontend's production API configuration and deployment architecture.
+
+### Development
+
+In development, the frontend never talks to the backend directly. `npm run dev` starts a Vite dev server that proxies any `/api/*` request to the backend (`VITE_API_PROXY_TARGET`, default `http://localhost:8080`), so the browser only ever sees same-origin requests. This is why the backend has no CORS configuration — none is needed for local development.
+
+### Production API configuration
+
+The frontend reads its API base URL from a single build-time environment variable:
+
+| Variable | Example | Notes |
+|---|---|---|
+| `VITE_API_BASE_URL` | `/api/v1` (default) or `https://api.your-domain.com/api/v1` | Read at build time via Vite; baked into the static JS bundle. Never contains a secret. |
+
+This is a Vite build-time variable, not a runtime one — it must be set correctly *before* running `npm run build` for the environment that build will be deployed to.
+
+### Deployment architecture (choose one)
+
+**Option A — Reverse proxy, single origin (recommended; requires no backend changes).**
+Deploy the static frontend build (`frontend/dist/`) and the backend behind a reverse proxy (nginx, Caddy, a cloud load balancer, or your platform's rewrite rules) on one origin, routing `/api/*` to the backend and everything else to the static files — the same shape the Vite dev proxy already emulates locally. `VITE_API_BASE_URL` stays as the relative default (`/api/v1`); no backend code changes are required. Example nginx shape:
+
+```nginx
+location /api/ {
+    proxy_pass http://backend:8080;
+}
+location / {
+    root /path/to/frontend/dist;
+    try_files $uri /index.html;
+}
+```
+
+**Option B — Separate origins (requires a backend change).**
+If the frontend and backend are deployed to different origins (e.g., frontend on a static host, backend on its own domain), set `VITE_API_BASE_URL` to the backend's full URL before building. This requires the backend to send CORS headers for the frontend's origin, which it currently does **not** do — Spring Security has no CORS configuration in this codebase. Enabling this option requires a backend code change and is outside the frontend's scope; it should be a deliberate decision made when the deployment target is known, not assumed.
+
+Do not deploy with an absolute `VITE_API_BASE_URL` pointing at a different origin than the frontend without first implementing Option B — requests will fail in the browser with CORS errors even though the build succeeds.

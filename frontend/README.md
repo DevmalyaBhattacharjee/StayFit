@@ -1,32 +1,64 @@
-# React + TypeScript + Vite
+# StayFit Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite frontend for the StayFit MVP — authentication, dashboard, health/progress tracking, workouts, and membership management against the [StayFit backend](../README.md).
 
-Currently, two official plugins are available:
+## Tech stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19, TypeScript, Vite
+- React Router (client-side routing)
+- Tailwind CSS v4 + Radix UI primitives
+- Axios (single shared client — see `src/lib/api-client.ts`)
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js 20+
+- A running instance of the [StayFit backend](../README.md) (see its README for setup)
 
-## Expanding the Oxlint configuration
+## Setup
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+cp .env.example .env   # adjust if your backend runs somewhere other than localhost:8080
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The dev server runs at `http://localhost:5173`. It proxies `/api/*` requests to the backend (see [Environment variables](#environment-variables) below), so no backend CORS configuration is needed in development.
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the Vite dev server with the `/api` proxy |
+| `npm run build` | Type-check (`tsc -b`) and produce a production build in `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Run oxlint |
+
+## Environment variables
+
+Copy `.env.example` to `.env` and adjust as needed. See the root [README's Frontend section](../README.md#frontend) for the full explanation of these variables and the production deployment architecture they imply.
+
+| Variable | Used by | Purpose |
+|---|---|---|
+| `VITE_API_BASE_URL` | The app itself (bundled into the build) | Base URL the Axios client sends requests to |
+| `VITE_API_PROXY_TARGET` | `vite.config.ts`, dev server only | Where the dev server's `/api` proxy forwards to |
+
+Never commit `.env` — it's gitignored. `.env.example` contains safe placeholders only.
+
+## Project structure
+
+```
+src/
+  api/            one module per backend resource (auth, health, progress, workout, membership)
+  components/
+    ui/           base primitives (Button, Card, Dialog, Input, Select, …)
+    common/       shared page-level building blocks (PageHeader, EmptyState, ErrorState, …)
+    layout/       app shell, sidebar, mobile nav
+    dashboard/, health/, progress/, workouts/, membership/
+                  feature-specific components
+  contexts/       AuthContext (the only auth mechanism — do not add another)
+  hooks/          use-async-data (fetch-on-mount + refetch, used by every page)
+  lib/            api-client (the one shared Axios instance), token-storage, formatting helpers
+  pages/          one component per route
+  routes/         route table + ProtectedRoute guard
+  types/          TypeScript types mirrored from the actual backend DTOs
+```
