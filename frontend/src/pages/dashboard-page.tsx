@@ -1,60 +1,47 @@
-import { Link } from "react-router-dom";
-import { ArrowRight, Dumbbell, HeartPulse, IdCard, TrendingUp } from "lucide-react";
+import { getCurrentHealth } from "@/api/health-api";
+import { getCurrentMembership } from "@/api/membership-api";
+import { getProgressHistory } from "@/api/progress-api";
+import { getWorkouts } from "@/api/workout-api";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { HealthSummaryCard } from "@/components/dashboard/health-summary-card";
+import { MembershipCard } from "@/components/dashboard/membership-card";
+import { ProgressSummaryCard } from "@/components/dashboard/progress-summary-card";
+import { QuickActionsCard } from "@/components/dashboard/quick-actions-card";
+import { RecentWorkoutsCard } from "@/components/dashboard/recent-workouts-card";
+import { useAuth } from "@/contexts/auth-context";
+import { useAsyncData } from "@/hooks/use-async-data";
 
-import { PageHeader } from "@/components/common/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const modules = [
-  {
-    title: "Health",
-    description: "View and update your current weight and height.",
-    href: "/health",
-    icon: HeartPulse,
-  },
-  {
-    title: "Progress",
-    description: "See how your health metrics have changed over time.",
-    href: "/progress",
-    icon: TrendingUp,
-  },
-  {
-    title: "Workouts",
-    description: "Log and review your completed workout sessions.",
-    href: "/workouts",
-    icon: Dumbbell,
-  },
-  {
-    title: "Membership",
-    description: "Browse plans and manage your current membership.",
-    href: "/membership",
-    icon: IdCard,
-  },
-];
+const RECENT_WORKOUTS_PAGE_SIZE = 4;
+const PROGRESS_SUMMARY_PAGE_SIZE = 2;
 
 function DashboardPage() {
-  return (
-    <div>
-      <PageHeader title="Dashboard" description="Your StayFit overview." />
+  const { user } = useAuth();
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {modules.map((mod) => (
-          <Link key={mod.href} to={mod.href}>
-            <Card className="h-full transition-colors hover:border-primary">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                    <mod.icon className="size-5" />
-                  </span>
-                  <ArrowRight className="size-4 text-muted-foreground" />
-                </div>
-                <CardTitle className="mt-2">{mod.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{mod.description}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+  const health = useAsyncData(getCurrentHealth);
+  const progress = useAsyncData(() => getProgressHistory({ page: 0, size: PROGRESS_SUMMARY_PAGE_SIZE }));
+  const workouts = useAsyncData(() => getWorkouts({ page: 0, size: RECENT_WORKOUTS_PAGE_SIZE }));
+  const membership = useAsyncData(getCurrentMembership);
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <DashboardHeader user={user} />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <HealthSummaryCard state={health} />
+        <MembershipCard state={membership} />
+      </div>
+
+      <ProgressSummaryCard state={progress} />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <RecentWorkoutsCard state={workouts} />
+        </div>
+        <QuickActionsCard />
       </div>
     </div>
   );
