@@ -28,4 +28,9 @@ interface MembershipPlanResponse {
   updatedAt: string;
 }
 
-export type { MembershipStatus, MembershipResponse, MembershipPlanResponse };
+/** Mirrors `com.stayfit.backend.dto.MembershipCreateRequest`. The field is `membershipPlanId`, never `planId`. */
+interface MembershipCreateRequest {
+  membershipPlanId: number;
+}
+
+export type { MembershipStatus, MembershipResponse, MembershipPlanResponse, MembershipCreateRequest };

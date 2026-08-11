@@ -11,4 +11,15 @@ function formatSignedWeight(changeKg: number): string {
   return `${sign}${changeKg.toFixed(1)} kg`;
 }
 
-export { formatDate, formatTime, formatSignedWeight };
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+function formatCurrency(amount: number): string {
+  return currencyFormatter.format(amount);
+}
+
+export { formatDate, formatTime, formatSignedWeight, formatCurrency };
