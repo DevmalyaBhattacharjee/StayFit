@@ -5,4 +5,10 @@ interface HealthProfileResponse {
   height: number;
 }
 
-export type { HealthProfileResponse };
+/** Mirrors `com.stayfit.backend.dto.HealthProfileUpdateRequest` (weight/height: required, positive, weight <= 500, height <= 300). */
+interface HealthProfileUpdateRequest {
+  weight: number;
+  height: number;
+}
+
+export type { HealthProfileResponse, HealthProfileUpdateRequest };

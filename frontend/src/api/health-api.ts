@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import type { HealthProfileResponse } from "@/types/health";
+import type { HealthProfileResponse, HealthProfileUpdateRequest } from "@/types/health";
 
 /** GET /api/v1/profile/health — the caller's current weight/height. */
 async function getCurrentHealth(): Promise<HealthProfileResponse> {
@@ -7,4 +7,14 @@ async function getCurrentHealth(): Promise<HealthProfileResponse> {
   return response.data;
 }
 
-export { getCurrentHealth };
+/**
+ * PUT /api/v1/profile/health — updates weight/height. The backend records the
+ * previous state (and this new one) as progress history, unless both values
+ * are identical to the current ones, in which case it's a no-op.
+ */
+async function updateHealth(data: HealthProfileUpdateRequest): Promise<HealthProfileResponse> {
+  const response = await apiClient.put<HealthProfileResponse>("/profile/health", data);
+  return response.data;
+}
+
+export { getCurrentHealth, updateHealth };
