@@ -25,7 +25,7 @@ public class ProgressController {
 
 	@GetMapping
 	public ResponseEntity<Page<ProgressRecordResponse>> getHistory(@AuthenticationPrincipal UserPrincipal principal,
-			@PageableDefault(size = 10, sort = "recordedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+			@PageableDefault(size = 10, sort = { "recordedAt", "id" }, direction = Sort.Direction.DESC) Pageable pageable) {
 		return ResponseEntity.ok(progressService.getHistory(principal.getId(), pageable));
 	}
 

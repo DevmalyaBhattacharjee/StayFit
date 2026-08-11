@@ -8,6 +8,8 @@ import com.stayfit.backend.dto.LoginRequest;
 import com.stayfit.backend.dto.RegisterRequest;
 import com.stayfit.backend.dto.UserResponse;
 import com.stayfit.backend.entity.Gender;
+import com.stayfit.backend.entity.ProgressRecord;
+import com.stayfit.backend.entity.User;
 import com.stayfit.backend.exception.ApiError;
 import com.stayfit.backend.repository.ProgressRecordRepository;
 import com.stayfit.backend.repository.UserRepository;
@@ -26,6 +28,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -148,6 +151,27 @@ class ProgressIntegrationTest {
 		assertThat(history.get(0).get("weight")).isEqualTo(68.0);
 		assertThat(history.get(1).get("weight")).isEqualTo(67.0);
 		assertThat(history.get(1).get("height")).isEqualTo(176.0);
+	}
+
+	@Test
+	void history_breaksTiesByIdWhenRecordedAtIsIdentical() {
+		// Regression test: two records created in the same request (e.g. the
+		// baseline + new snapshot from a first health update) can end up with
+		// the exact same stored recordedAt value on platforms with coarse clock
+		// resolution. "Newest first" must still be deterministic in that case.
+		User user = userRepository.findByEmail(emailA.toLowerCase()).orElseThrow();
+		Instant tiedInstant = Instant.now();
+
+		ProgressRecord older = progressRecordRepository.save(ProgressRecord.builder()
+				.user(user).weight(67.0).height(176.0).recordedAt(tiedInstant).build());
+		ProgressRecord newer = progressRecordRepository.save(ProgressRecord.builder()
+				.user(user).weight(68.0).height(176.0).recordedAt(tiedInstant).build());
+
+		List<Map<String, Object>> history = content(getHistory(tokenA, ""));
+
+		assertThat(history).hasSize(2);
+		assertThat(((Number) history.get(0).get("id")).longValue()).isEqualTo(newer.getId());
+		assertThat(((Number) history.get(1).get("id")).longValue()).isEqualTo(older.getId());
 	}
 
 	@Test
