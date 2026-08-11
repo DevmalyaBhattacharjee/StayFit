@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import type { WorkoutPageResponse } from "@/types/workout";
+import type { WorkoutCreateRequest, WorkoutPageResponse, WorkoutResponse, WorkoutUpdateRequest } from "@/types/workout";
 
 interface GetWorkoutsParams {
   page?: number;
@@ -12,4 +12,21 @@ async function getWorkouts(params: GetWorkoutsParams = {}): Promise<WorkoutPageR
   return response.data;
 }
 
-export { getWorkouts };
+/** POST /api/v1/workouts — logs a new workout for the authenticated caller (ownership comes from the JWT, never from the request). */
+async function createWorkout(data: WorkoutCreateRequest): Promise<WorkoutResponse> {
+  const response = await apiClient.post<WorkoutResponse>("/workouts", data);
+  return response.data;
+}
+
+/** PUT /api/v1/workouts/{id} — updates one of the caller's own workouts. */
+async function updateWorkout(id: number, data: WorkoutUpdateRequest): Promise<WorkoutResponse> {
+  const response = await apiClient.put<WorkoutResponse>(`/workouts/${id}`, data);
+  return response.data;
+}
+
+/** DELETE /api/v1/workouts/{id} — deletes one of the caller's own workouts. */
+async function deleteWorkout(id: number): Promise<void> {
+  await apiClient.delete(`/workouts/${id}`);
+}
+
+export { getWorkouts, createWorkout, updateWorkout, deleteWorkout };

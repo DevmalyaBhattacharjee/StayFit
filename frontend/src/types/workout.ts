@@ -18,4 +18,16 @@ interface WorkoutResponse {
 /** The JSON shape of `GET /api/v1/workouts` — a `Page<WorkoutResponse>`. */
 type WorkoutPageResponse = PageResponse<WorkoutResponse>;
 
-export type { WorkoutType, WorkoutResponse, WorkoutPageResponse };
+/** Mirrors `com.stayfit.backend.dto.WorkoutCreateRequest` (durationMinutes: 1-600, caloriesBurned: 0-10000, notes: optional, max 500 chars). */
+interface WorkoutCreateRequest {
+  workoutDate: string;
+  workoutType: WorkoutType;
+  durationMinutes: number;
+  caloriesBurned: number;
+  notes: string | null;
+}
+
+/** Mirrors `com.stayfit.backend.dto.WorkoutUpdateRequest` — identical shape/validation to `WorkoutCreateRequest`. */
+type WorkoutUpdateRequest = WorkoutCreateRequest;
+
+export type { WorkoutType, WorkoutResponse, WorkoutPageResponse, WorkoutCreateRequest, WorkoutUpdateRequest };
