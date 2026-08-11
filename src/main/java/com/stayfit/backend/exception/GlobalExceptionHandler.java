@@ -63,6 +63,18 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
 	}
 
+	@ExceptionHandler(InactivePlanException.class)
+	public ResponseEntity<ApiError> handleInactivePlan(InactivePlanException ex, HttpServletRequest request) {
+		ApiError body = ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request", ex.getMessage(), request.getRequestURI());
+		return ResponseEntity.badRequest().body(body);
+	}
+
+	@ExceptionHandler(ActiveMembershipExistsException.class)
+	public ResponseEntity<ApiError> handleActiveMembershipExists(ActiveMembershipExistsException ex, HttpServletRequest request) {
+		ApiError body = ApiError.of(HttpStatus.CONFLICT.value(), "Conflict", ex.getMessage(), request.getRequestURI());
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+	}
+
 	@ExceptionHandler(AuthenticationException.class)
 	public ResponseEntity<ApiError> handleAuthentication(HttpServletRequest request) {
 		ApiError body = ApiError.of(HttpStatus.UNAUTHORIZED.value(), "Unauthorized",
