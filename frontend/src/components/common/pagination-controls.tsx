@@ -20,7 +20,7 @@ function PaginationControls({ page, totalPages, isFirst, isLast, onPrevious, onN
   }
 
   return (
-    <div className={cn("flex items-center justify-between gap-4", className)}>
+    <div className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
       <Button type="button" variant="outline" size="sm" onClick={onPrevious} disabled={isFirst}>
         <ChevronLeft />
         Previous
