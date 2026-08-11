@@ -4,6 +4,18 @@ MVP backend for StayFit — user authentication, workout tracking, membership pl
 
 > **Status:** MVP feature-complete (Phases 1-6). Authentication, workout tracking, membership plans, and progress/health logging are all implemented and tested.
 
+## Repository structure
+
+This is a monorepo containing both the backend (documented here) and the frontend (documented in the [Frontend](#frontend) section below and in [`frontend/README.md`](frontend/README.md)):
+
+```
+StayFit/
+├── backend/    Spring Boot API (this README)
+├── frontend/   React + Vite app (frontend/README.md)
+├── .gitignore
+└── README.md
+```
+
 ## Tech Stack
 
 - Java 25
@@ -61,12 +73,14 @@ $env:JWT_EXPIRATION = "86400000"
 ## Running the app
 
 ```bash
+cd backend
 mvn spring-boot:run
 ```
 
 Or build a jar and run it:
 
 ```bash
+cd backend
 mvn clean package
 java -jar target/stayfit-backend-0.0.1-SNAPSHOT.jar
 ```
@@ -86,6 +100,7 @@ On first startup (dev profile), three membership plans (Basic, Standard, Premium
 ## Running tests
 
 ```bash
+cd backend
 mvn clean test
 ```
 
@@ -144,21 +159,25 @@ Pagination (`/workouts`, `/progress`): `?page=0&size=10` — default size `10`, 
 
 ## Project structure
 
+The backend lives under `backend/` (the frontend lives alongside it under `frontend/` — see the [Frontend](#frontend) section below):
+
 ```
-src/main/java/com/stayfit/backend/
-  config/       application-level beans (dev-only membership plan seeder)
-  controller/   REST controllers
-  dto/          request/response DTOs (entities are never exposed over the API)
-  entity/       JPA entities
-  exception/    global exception handling (consistent ApiError JSON shape)
-  repository/   Spring Data JPA repositories
-  security/     JWT auth, Spring Security configuration
-  service/      business logic
-  StayFitApplication.java
-src/main/resources/
-  application.yml       base configuration (env-var driven)
-  application-dev.yml   local development overrides (active by default)
-src/test/java/...       integration and unit tests
+backend/
+  pom.xml
+  src/main/java/com/stayfit/backend/
+    config/       application-level beans (dev-only membership plan seeder)
+    controller/   REST controllers
+    dto/          request/response DTOs (entities are never exposed over the API)
+    entity/       JPA entities
+    exception/    global exception handling (consistent ApiError JSON shape)
+    repository/   Spring Data JPA repositories
+    security/     JWT auth, Spring Security configuration
+    service/      business logic
+    StayFitApplication.java
+  src/main/resources/
+    application.yml       base configuration (env-var driven)
+    application-dev.yml   local development overrides (active by default)
+  src/test/java/...       integration and unit tests
 ```
 
 ## Frontend
