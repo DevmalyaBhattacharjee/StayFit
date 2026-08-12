@@ -1,28 +1,53 @@
 # StayFit Frontend
 
-React + TypeScript + Vite frontend for the StayFit MVP — authentication, dashboard, health/progress tracking, workouts, and membership management against the [StayFit backend](../README.md).
+## Overview
 
-## Tech stack
+This is the React + TypeScript frontend for StayFit, built with Vite. It provides the user-facing interface for authentication, dashboard, health/progress tracking, workout logging, and membership management, talking to the [StayFit backend](../backend/README.md) over its REST API.
 
-- React 19, TypeScript, Vite
+## Features
+
+- Authentication (login/register) with token-based session handling
+- Protected routes that redirect unauthenticated users
+- Dashboard overview
+- Health profile management
+- Progress timeline (historical health snapshots)
+- Workout tracking (create, view, edit, delete)
+- Membership management (browse plans, subscribe, cancel, view history)
+- User profile page
+- Responsive navigation (desktop sidebar, mobile nav)
+- Loading, error, and empty states across data-driven pages
+
+## Tech Stack
+
+- React 19 + TypeScript
+- Vite (build tool and dev server)
 - React Router (client-side routing)
-- Tailwind CSS v4 + Radix UI primitives
-- Axios (single shared client — see `src/lib/api-client.ts`)
+- Tailwind CSS v4 (via `@tailwindcss/vite`) + Radix UI primitives (`react-avatar`, `react-dialog`, `react-label`, `react-select`, `react-slot`)
+- Axios (single shared HTTP client)
+- `class-variance-authority`, `clsx`, `tailwind-merge` (styling utilities)
+- `lucide-react` (icons)
+- oxlint (linting)
 
 ## Prerequisites
 
 - Node.js 20+
-- A running instance of the [StayFit backend](../README.md) (see its README for setup)
+- npm
 
-## Setup
+## Installation
 
 ```bash
+cd frontend
 npm install
 cp .env.example .env   # adjust if your backend runs somewhere other than localhost:8080
+```
+
+## Running the App
+
+```bash
 npm run dev
 ```
 
-The dev server runs at `http://localhost:5173`. It proxies `/api/*` requests to the backend (see [Environment variables](#environment-variables) below), so no backend CORS configuration is needed in development.
+The dev server runs at `http://localhost:5173`. It proxies `/api/*` requests to the backend (see [Environment Variables](#environment-variables) below), so no backend CORS configuration is needed in development. A running instance of the [StayFit backend](../backend/README.md) is required.
 
 ## Scripts
 
@@ -33,18 +58,18 @@ The dev server runs at `http://localhost:5173`. It proxies `/api/*` requests to 
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | Run oxlint |
 
-## Environment variables
+## Environment Variables
 
-Copy `.env.example` to `.env` and adjust as needed. See the root [README's Frontend section](../README.md#frontend) for the full explanation of these variables and the production deployment architecture they imply.
+Copy `.env.example` to `.env` and adjust as needed.
 
 | Variable | Used by | Purpose |
 |---|---|---|
 | `VITE_API_BASE_URL` | The app itself (bundled into the build) | Base URL the Axios client sends requests to |
 | `VITE_API_PROXY_TARGET` | `vite.config.ts`, dev server only | Where the dev server's `/api` proxy forwards to |
 
-Never commit `.env` — it's gitignored. `.env.example` contains safe placeholders only.
+Never commit `.env` — it's gitignored. `.env.example` contains safe placeholders only. See the [root README's Production Deployment section](../README.md#production-deployment) for how these variables factor into deployment.
 
-## Project structure
+## Project Structure
 
 ```
 src/
@@ -62,3 +87,9 @@ src/
   routes/         route table + ProtectedRoute guard
   types/          TypeScript types mirrored from the actual backend DTOs
 ```
+
+## License
+
+[License](../LICENSE)
+
+[Backend Documentation](../backend/README.md)
