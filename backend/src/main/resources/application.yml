@@ -2,7 +2,11 @@ spring:
   application:
     name: stayfit-backend
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    # No profile is active by default, so an unset SPRING_PROFILES_ACTIVE (as on
+    # Render) falls back to this file's safe settings (ddl-auto: none, no dev
+    # seeder, no verbose SQL logging). Local development must explicitly opt
+    # into the dev profile — see backend/README.md.
+    active: ${SPRING_PROFILES_ACTIVE:}
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:stayfit_dev}
     username: ${DB_USERNAME:stayfit}

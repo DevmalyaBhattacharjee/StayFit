@@ -55,7 +55,7 @@ The application is configured entirely through environment variables — no cred
 | `JWT_SECRET` | **Required** | *(none)* | Secret key used to sign JWTs (HS256) — use a long, random value |
 | `JWT_EXPIRATION` | Optional | `86400000` (24h) | JWT validity in milliseconds |
 | `SERVER_PORT` | Optional | `8080` | HTTP port the app listens on |
-| `SPRING_PROFILES_ACTIVE` | Optional | `dev` | Active Spring profile |
+| `SPRING_PROFILES_ACTIVE` | Optional | *(none)* | Active Spring profile. No profile is active by default — set it to `dev` for local development (see below). Production deployments must leave it unset. |
 
 Set the environment variables before running the app (PowerShell example — replace the placeholders with your own values, do not reuse these examples):
 
@@ -67,7 +67,10 @@ $env:DB_USERNAME = "stayfit"
 $env:DB_PASSWORD = "<your-password>"
 $env:JWT_SECRET = "<your-secret>"
 $env:JWT_EXPIRATION = "86400000"
+$env:SPRING_PROFILES_ACTIVE = "dev"
 ```
+
+The `dev` profile (`application-dev.yml`) enables schema auto-update (`ddl-auto: update`), verbose SQL logging, and the membership-plan seeder — all intended for local development only. Without it, the app runs on the base `application.yml` alone: `ddl-auto: none`, no seeder, no debug SQL logging. This is what makes production (Render) safe by default — as long as `SPRING_PROFILES_ACTIVE` is left unset there, it can never accidentally pick up dev-only behavior.
 
 ## Running Backend
 
@@ -86,7 +89,7 @@ GET http://localhost:8080/api/v1/health
 { "status": "UP", "service": "stayfit-backend" }
 ```
 
-On first startup (`dev` profile), three membership plans (Basic, Standard, Premium) are seeded automatically if they don't already exist.
+On first startup with the `dev` profile active, three membership plans (Basic, Standard, Premium) are seeded automatically if they don't already exist.
 
 ## Build
 
@@ -103,7 +106,7 @@ cd backend
 mvn clean test
 ```
 
-Tests run as full integration tests against the same local `stayfit_dev` PostgreSQL database (same environment variables as above must be set) — there is no in-memory/mocked database. Each test class creates and cleans up its own users/records.
+Tests run as full integration tests against the same local `stayfit_dev` PostgreSQL database (same environment variables as above must be set, including `SPRING_PROFILES_ACTIVE=dev` so the schema is created) — there is no in-memory/mocked database. Each test class creates and cleans up its own users/records.
 
 Currently verified result:
 
@@ -227,7 +230,7 @@ backend/
 
 ## Production Configuration
 
-In production, set all environment variables listed above through the deployment platform's secret/config management — never commit them to source control. `SPRING_PROFILES_ACTIVE` should be set to a non-`dev` profile so the membership-plan seeder and other dev-only conveniences do not run; use a real migration strategy instead of relying on `ddl-auto`.
+In production, set all environment variables listed above through the deployment platform's secret/config management — never commit them to source control. Leave `SPRING_PROFILES_ACTIVE` **unset** in production; the base `application.yml` (no profile) is the safe production configuration (`ddl-auto: none`, no membership-plan seeder, no debug SQL logging). Do not set it to `dev` in production — that enables `ddl-auto: update`, which lets Hibernate auto-alter the live schema on every boot. There is currently no dedicated `application-prod.yml` and no migration tool (e.g. Flyway/Liquibase); a real migration strategy is recommended before the schema needs to change again, but is out of scope for this fix.
 
 By default the backend has no CORS configuration. It expects to sit behind a reverse proxy that serves the frontend and backend from a single origin (see the [root README's Production Deployment section](../README.md#production-deployment)). If the frontend is deployed to a different origin, CORS must be explicitly configured here before that will work.
 
