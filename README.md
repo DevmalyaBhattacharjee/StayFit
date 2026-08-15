@@ -69,7 +69,6 @@ StayFit/
 │   ├── src/
 │   └── README.md
 ├── .github/
-├── .claude/
 ├── .idea/
 ├── .gitignore
 ├── LICENSE

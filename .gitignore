@@ -22,8 +22,6 @@ target/
 ### VS Code ###
 .vscode/
 
-### Claude Code ###
-.claude/settings.local.json
 
 ### macOS / Windows ###
 .DS_Store
