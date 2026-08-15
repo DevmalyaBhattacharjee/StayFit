@@ -1,5 +1,7 @@
 package com.stayfit.backend.security;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,10 +14,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Stateless JWT-based authentication. Replaces the temporary Phase 1
- * permit-all configuration.
+ * Stateless JWT-based authentication.
  */
 @Configuration
 public class SecurityConfig {
@@ -25,8 +29,12 @@ public class SecurityConfig {
 	private final RestAuthenticationEntryPoint authenticationEntryPoint;
 	private final RestAccessDeniedHandler accessDeniedHandler;
 
-	public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomUserDetailsService userDetailsService,
-			RestAuthenticationEntryPoint authenticationEntryPoint, RestAccessDeniedHandler accessDeniedHandler) {
+	public SecurityConfig(
+			JwtAuthenticationFilter jwtAuthenticationFilter,
+			CustomUserDetailsService userDetailsService,
+			RestAuthenticationEntryPoint authenticationEntryPoint,
+			RestAccessDeniedHandler accessDeniedHandler) {
+
 		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
 		this.userDetailsService = userDetailsService;
 		this.authenticationEntryPoint = authenticationEntryPoint;
@@ -40,36 +48,121 @@ public class SecurityConfig {
 
 	@Bean
 	public DaoAuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+		DaoAuthenticationProvider provider =
+				new DaoAuthenticationProvider(userDetailsService);
+
 		provider.setPasswordEncoder(passwordEncoder());
+
 		return provider;
 	}
 
 	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+	public AuthenticationManager authenticationManager(
+			AuthenticationConfiguration config) throws Exception {
+
 		return config.getAuthenticationManager();
 	}
 
+	/**
+	 * CORS configuration for local development and Vercel production frontend.
+	 */
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	public CorsConfigurationSource corsConfigurationSource() {
+
+		CorsConfiguration configuration = new CorsConfiguration();
+
+		configuration.setAllowedOrigins(List.of(
+				"http://localhost:5173",
+				"https://stayfit-health.vercel.app"
+		));
+
+		configuration.setAllowedMethods(List.of(
+				"GET",
+				"POST",
+				"PUT",
+				"PATCH",
+				"DELETE",
+				"OPTIONS"
+		));
+
+		configuration.setAllowedHeaders(List.of("*"));
+
+		configuration.setAllowCredentials(true);
+
+		UrlBasedCorsConfigurationSource source =
+				new UrlBasedCorsConfigurationSource();
+
+		source.registerCorsConfiguration("/**", configuration);
+
+		return source;
+	}
+
+	@Bean
+	public SecurityFilterChain securityFilterChain(
+			HttpSecurity http) throws Exception {
+
 		http
+				// Disable CSRF because this is a stateless REST API
 				.csrf(csrf -> csrf.disable())
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+				// Enable CORS using the CorsConfigurationSource above
+				.cors(cors -> {})
+
+				// Stateless JWT authentication
+				.sessionManagement(session ->
+						session.sessionCreationPolicy(
+								SessionCreationPolicy.STATELESS))
+
 				.authenticationProvider(authenticationProvider())
+
 				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/v1/membership-plans", "/api/v1/membership-plans/**").permitAll()
-						.anyRequest().authenticated())
+
+						// Allow browser CORS preflight requests
+						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+						// Public authentication endpoints
+						.requestMatchers(
+								HttpMethod.POST,
+								"/api/v1/auth/register"
+						).permitAll()
+
+						.requestMatchers(
+								HttpMethod.POST,
+								"/api/v1/auth/login"
+						).permitAll()
+
+						// Public health endpoint
+						.requestMatchers(
+								HttpMethod.GET,
+								"/api/v1/health"
+						).permitAll()
+
+						// Public membership plans
+						.requestMatchers(
+								HttpMethod.GET,
+								"/api/v1/membership-plans",
+								"/api/v1/membership-plans/**"
+						).permitAll()
+
+						// Everything else requires authentication
+						.anyRequest().authenticated()
+				)
+
 				.exceptionHandling(exceptions -> exceptions
 						.authenticationEntryPoint(authenticationEntryPoint)
-						.accessDeniedHandler(accessDeniedHandler))
+						.accessDeniedHandler(accessDeniedHandler)
+				)
+
 				.httpBasic(httpBasic -> httpBasic.disable())
+
 				.formLogin(formLogin -> formLogin.disable())
-				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+				// JWT filter runs before Spring's username/password filter
+				.addFilterBefore(
+						jwtAuthenticationFilter,
+						UsernamePasswordAuthenticationFilter.class
+				);
 
 		return http.build();
 	}
-
 }
